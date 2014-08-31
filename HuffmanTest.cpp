@@ -117,20 +117,27 @@ int PickTwoLowest(TreeNode** left, TreeNode** right, std::list<BranchOrKey>& key
 	return numberReturned; 
 }
 
-void PrintTree(TreeNode* root, int indent, std::ofstream& out)
+void PrintTree(std::list<int> bits, TreeNode* root, int indent, std::ofstream& out)
 {
 	if (!root->Leaf)
 	{
 		for (int c = 0; c < indent; c++) out << "\t"; 
 		out << "[" << root->Likelihood << "]" << std::endl;
-
-		PrintTree(root->Left, indent+1, out); 
-		PrintTree(root->Right, indent+1, out); 
+		
+		std::list<int> leftBits(bits); 
+		leftBits.push_back(1); 
+		PrintTree(leftBits, root->Left, indent + 1, out);
+		std::list<int> rightBits(bits); 
+		rightBits.push_back(0); 
+		PrintTree(rightBits, root->Right, indent + 1, out);
 	}
 	else
 	{
 		for (int c = 0; c < indent; c++) out << "\t";
-		out << root->Val << ":" << root->Likelihood << std::endl; 
+		out << root->Val << ":" << root->Likelihood << ":"; 
+		for (auto itr = bits.begin(); itr != bits.end(); itr++)
+			out << *itr; 
+		out << std::endl;
 	}
 }
 
@@ -165,13 +172,20 @@ void Encode(std::string phrase, char** buffer, int* bufferLength)
 			break;
 		}
 	} 
+
+	std::ofstream out("C:/users/brush/desktop/test.txt"); 
+	std::list<int> bits; 
+	PrintTree(bits, currentRoot, 0, out);
+	out.close();	
 }
 
 int _tmain(int argc, _TCHAR* argv[])
 {
 	char* buffer; 
 	int length; 
-	Encode("Hello World", &buffer, &length); 
+	Encode("HelloWorld", &buffer, &length); 
+
+	getchar(); 
 
 	//TreeNode* nodes = new TreeNode[sizeof(TreeNode) * 512]; 
 	//memset((char*)nodes, 0, sizeof(TreeNode) * 512); 
