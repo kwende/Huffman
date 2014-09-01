@@ -8,6 +8,7 @@
 #include <vector>
 #include <algorithm>
 #include <fstream>
+#include <sstream>
 
 struct TreeNode
 {
@@ -117,27 +118,21 @@ int PickTwoLowest(TreeNode** left, TreeNode** right, std::list<BranchOrKey>& key
 	return numberReturned; 
 }
 
-void PrintTree(std::list<int> bits, TreeNode* root, int indent, std::ofstream& out)
+void PrintTree(std::map<char,std::list<int>>& dict, std::list<int> bits, 
+	TreeNode* root, int indent)
 {
 	if (!root->Leaf)
 	{
-		for (int c = 0; c < indent; c++) out << "\t"; 
-		out << "[" << root->Likelihood << "]" << std::endl;
-		
 		std::list<int> leftBits(bits); 
 		leftBits.push_back(1); 
-		PrintTree(leftBits, root->Left, indent + 1, out);
+		PrintTree(dict, leftBits, root->Left, indent + 1);
 		std::list<int> rightBits(bits); 
 		rightBits.push_back(0); 
-		PrintTree(rightBits, root->Right, indent + 1, out);
+		PrintTree(dict, rightBits, root->Right, indent + 1);
 	}
 	else
 	{
-		for (int c = 0; c < indent; c++) out << "\t";
-		out << root->Val << ":" << root->Likelihood << ":"; 
-		for (auto itr = bits.begin(); itr != bits.end(); itr++)
-			out << *itr; 
-		out << std::endl;
+		dict[root->Val] = bits; 
 	}
 }
 
@@ -173,53 +168,34 @@ void Encode(std::string phrase, char** buffer, int* bufferLength)
 		}
 	} 
 
-	std::ofstream out("C:/users/brush/desktop/test.txt"); 
 	std::list<int> bits; 
-	PrintTree(bits, currentRoot, 0, out);
-	out.close();	
+	std::map<char, std::list<int>> dict; 
+	PrintTree(dict, bits, currentRoot, 0);
+
+	int bitsUsed = 0; 
+	for (int c = 0; c < phrase.length(); c++)
+	{
+		std::list<int> bits = dict[phrase[c]]; 
+		for (auto itr = bits.begin(); itr != bits.end(); itr++)
+		{
+			//std::cout << (*itr); 
+			bitsUsed++; 
+		}
+	}
+	std::cout << std::endl << (phrase.length() * 8) / (bitsUsed * 1.0) 
+		<< "x compression" << std::endl;
 }
 
 int _tmain(int argc, _TCHAR* argv[])
 {
 	char* buffer; 
 	int length; 
-	Encode("HelloWorld", &buffer, &length); 
+	std::ifstream in("declaration.txt"); 
+	std::stringstream text; 
+	text << in.rdbuf(); 
+	Encode(text.str(), &buffer, &length); 
 
 	getchar(); 
-
-	//TreeNode* nodes = new TreeNode[sizeof(TreeNode) * 512]; 
-	//memset((char*)nodes, 0, sizeof(TreeNode) * 512); 
-
-	//std::list<BranchOrKey> keys; 
-	//keys.push_back(BranchOrKey(NULL, 1, 15)); 
-	//keys.push_back(BranchOrKey(NULL, 2, 5)); 
-	//keys.push_back(BranchOrKey(NULL, 3, 20));
-	//keys.push_back(BranchOrKey(NULL, 4, 7)); 
-	//keys.push_back(BranchOrKey(NULL, 5, 45));
-	//keys.push_back(BranchOrKey(NULL, 6, 10));
-
-	//TreeNode* currentRoot = NULL; 
-	//for (;;)
-	//{
-	//	TreeNode* leftNode, rightNode;
-	//	int numberReturned = PickTwoLowest(&leftNode, &rightNode, keys);
-
-	//	TreeNode* parent = new TreeNode(false, leftNode, rightNode, -1,
-	//		leftNode->Likelihood + rightNode->Likelihood); 
-	//	currentRoot = parent; 
-
-	//	keys.push_back(BranchOrKey(parent, -1, parent->Likelihood)); 
-
-	//	if (keys.size() == 1)
-	//	{
-	//		std::cout << "Done" << std::endl; 
-	//		break; 
-	//	}
-	//}
-
-
-
-	//getchar(); 
 
 	return 0;
 }
