@@ -28,7 +28,7 @@ struct TreeNode
 	bool Leaf; 
 	TreeNode *Left;
 	TreeNode *Right;
-	char Val; 
+	short Val; 
 	int Likelihood; 
 };
 
@@ -59,13 +59,13 @@ struct BranchOrKey
 
 bool RemoveAndGetLowest(std::list<BranchOrKey>& keys, BranchOrKey *out)
 {
-	int lowestLikelihood = 100000; 
+	int lowestLikelihood = -1; 
 	BranchOrKey best; 
 	bool found = false; 
 	for(auto itr = keys.begin(); itr != keys.end(); itr++)
 	{
 		BranchOrKey current = *itr; 
-		if(current.Likelihood < lowestLikelihood)
+		if(current.Likelihood < lowestLikelihood || lowestLikelihood == -1)
 		{
 			best = current; 
 			lowestLikelihood = current.Likelihood; 
@@ -136,10 +136,10 @@ void PrintTree(std::map<char,std::list<int>>& dict, std::list<int> bits,
 	}
 }
 
-void Encode(std::string phrase, char** buffer, int* bufferLength)
+void Encode(std::vector<short> phrase, char** buffer, int* bufferLength)
 {
-	std::map<char,int> freq; 
-	for (int c = 0; c < phrase.length(); c++)
+	std::map<short,int> freq; 
+	for (int c = 0; c < phrase.size(); c++)
 	{
 		freq[phrase[c]]++; 
 	}
@@ -172,29 +172,36 @@ void Encode(std::string phrase, char** buffer, int* bufferLength)
 	std::map<char, std::list<int>> dict; 
 	PrintTree(dict, bits, currentRoot, 0);
 
-	int bitsUsed = 0; 
-	for (int c = 0; c < phrase.length(); c++)
-	{
-		std::list<int> bits = dict[phrase[c]]; 
-		for (auto itr = bits.begin(); itr != bits.end(); itr++)
-		{
-			//std::cout << (*itr); 
-			bitsUsed++; 
-		}
-	}
-	std::cout << std::endl << (phrase.length() * 8) / (bitsUsed * 1.0) 
-		<< "x compression" << std::endl;
+	//int bitsUsed = 0; 
+	//for (int c = 0; c < phrase.size(); c++)
+	//{
+	//	std::list<int> bits = dict[phrase[c]]; 
+	//	for (auto itr = bits.begin(); itr != bits.end(); itr++)
+	//	{
+	//		//std::cout << (*itr); 
+	//		bitsUsed++; 
+	//	}
+	//}
+	//std::cout << std::endl << (phrase.size() * 16) / (bitsUsed * 1.0) 
+	//	<< "x compression" << std::endl;
 }
 
 int _tmain(int argc, _TCHAR* argv[])
 {
 	char* buffer; 
 	int length; 
-	std::ifstream in("declaration.txt"); 
-	std::stringstream text; 
-	text << in.rdbuf(); 
-	Encode(text.str(), &buffer, &length); 
+	std::ifstream in("deltas.csv"); 
 
+	std::vector<short> phrase; 
+	short val; 
+	while (in >> val)
+	{
+		phrase.push_back(val); 
+	}
+
+	Encode(phrase, &buffer, &length);
+
+	std::cout << "done" << std::endl; 
 	getchar(); 
 
 	return 0;
